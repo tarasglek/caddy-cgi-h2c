@@ -21,4 +21,4 @@ jobs:
       - name: Install xcaddy
         run: go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
       - name: Build Caddy with plugin
-        run: xcaddy build --with github.com/tarasglek/caddy-cgi-stdio-h2c-reverse-proxy=.
+        run: xcaddy build --with github.com/tarasglek/caddy-cgi-h2c=.

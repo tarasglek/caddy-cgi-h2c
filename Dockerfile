@@ -1,7 +1,7 @@
 FROM caddy:builder AS builder
 
 RUN xcaddy build \
-    --with github.com/tarasglek/caddy-cgi-stdio-h2c-reverse-proxy
+    --with github.com/tarasglek/caddy-cgi-h2c
 
 FROM caddy:latest
 

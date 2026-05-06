@@ -1,4 +1,4 @@
-module github.com/tarasglek/caddy-cgi-stdio-h2c-reverse-proxy
+module github.com/tarasglek/caddy-cgi-h2c
 
 go 1.25.0
 

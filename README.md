@@ -15,13 +15,13 @@ http.reverse_proxy.transport.cgi_stdio_h2c
 Install [`xcaddy`](https://github.com/caddyserver/xcaddy), then build Caddy with this plugin:
 
 ```sh
-xcaddy build --with github.com/tarasglek/caddy-cgi-stdio-h2c-reverse-proxy
+xcaddy build --with github.com/tarasglek/caddy-cgi-h2c
 ```
 
 For local development from this repository:
 
 ```sh
-xcaddy build --with github.com/tarasglek/caddy-cgi-stdio-h2c-reverse-proxy=.
+xcaddy build --with github.com/tarasglek/caddy-cgi-h2c=.
 ```
 
 ## Caddyfile example
