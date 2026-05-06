@@ -1,4 +1,4 @@
-# Caddy CGI H2C: Modern successor to cgi-bin
+# Caddy CGI H2C: CGI-bin ergonomics with HTTP/2 reverse proxy semantics
 
 I was curious if we could marry cgi-bin process model with reverse proxies. We can! This caddy module allows one to reverse proxy to a binary via stdin/stdout. Eg your server is a binary that receives unencrypted http/2 on stdin and responds on stdout. Since http/2 supports connection multiplexing, a single binary invocation can handle multiple requests. After last request is done, the process is shut down.
 
