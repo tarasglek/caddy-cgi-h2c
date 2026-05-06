@@ -32,13 +32,15 @@ xcaddy build --with github.com/tarasglek/caddy-cgi-h2c=.
 
 ## Caddyfile example
 
+[`go-h2c-stdio`](https://github.com/tarasglek/go-h2c-stdio) is a sample backend that speaks cleartext HTTP/2 over stdin/stdout and can be used with this transport.
+
 ```caddyfile
 :8080
 
 reverse_proxy 127.0.0.1:65535 {
 	transport cgi_h2c {
-		command /usr/bin/example-h2c
-		args --cgi-h2c --flag value
+		command /usr/local/bin/h2c-stdio
+		args -stdio
 		dir /srv/app
 		env KEY value
 		restart true
@@ -66,8 +68,8 @@ The upstream address is still required by Caddy's reverse proxy handler, but thi
                   "handler": "reverse_proxy",
                   "transport": {
                     "protocol": "cgi_h2c",
-                    "command": "/usr/bin/example-h2c",
-                    "args": ["--cgi-h2c"],
+                    "command": "/usr/local/bin/h2c-stdio",
+                    "args": ["-stdio"],
                     "capture_stderr": true,
                     "shutdown_timeout": 2000000000
                   },
