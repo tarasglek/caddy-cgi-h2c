@@ -2,13 +2,19 @@
 
 I was curious if we could marry cgi-bin process model with reverse proxies. We can! This caddy module allows one to reverse proxy to a binary via stdin/stdout. Eg your server is a binary that receives unencrypted http/2 on stdin and responds on stdout. Since http/2 supports connection multiplexing, a single binary invocation can handle multiple requests. After last request is done, the process is shut down.
 
-This means less work to deploy services:
+Much like with old cgi-bin you just drop a binary+config to deploy services:
 - No need to allocate ports/ips
 - No need to write systemd units or docker services to manage services
 
 Processes are easy to sandbox:
 - Can use [landrun](https://github.com/Zouuup/landrun) or some BSD equivalent
 - Can wrap your binary in wasm runtime
+
+Unlike cgi-bin you get to:
+- Avoid fork/exec per request
+- Serve concurrent requests from one process
+- Keep in-memory caches, pools, and state between requests
+- Speak HTTP directly instead of CGI env vars plus stdin/stdout
 
 ## Caddy module name
 
