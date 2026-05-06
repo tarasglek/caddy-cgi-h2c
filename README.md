@@ -1,0 +1,118 @@
+# Caddy CGI stdio h2c reverse proxy transport
+
+A Caddy reverse proxy transport that starts a child process and proxies requests to it over cleartext HTTP/2 (`h2c`) on the process's stdin/stdout.
+
+This is useful for CGI-style backends that speak HTTP/2 over stdio instead of listening on a TCP or Unix socket.
+
+## Caddy module name
+
+```text
+http.reverse_proxy.transport.cgi_stdio_h2c
+```
+
+## Build
+
+Install [`xcaddy`](https://github.com/caddyserver/xcaddy), then build Caddy with this plugin:
+
+```sh
+xcaddy build --with github.com/tarasglek/caddy-cgi-stdio-h2c-reverse-proxy
+```
+
+For local development from this repository:
+
+```sh
+xcaddy build --with github.com/tarasglek/caddy-cgi-stdio-h2c-reverse-proxy=.
+```
+
+## Caddyfile example
+
+```caddyfile
+:8080
+
+reverse_proxy 127.0.0.1:65535 {
+	transport cgi_stdio_h2c {
+		command /usr/bin/example-h2c
+		args --stdio --flag value
+		dir /srv/app
+		env KEY value
+		restart true
+		capture_stderr
+		shutdown_timeout 2s
+	}
+}
+```
+
+The upstream address is still required by Caddy's reverse proxy handler, but this transport communicates with the configured child process over stdio.
+
+## JSON example
+
+```json
+{
+  "apps": {
+    "http": {
+      "servers": {
+        "srv0": {
+          "listen": [":8080"],
+          "routes": [
+            {
+              "handle": [
+                {
+                  "handler": "reverse_proxy",
+                  "transport": {
+                    "protocol": "cgi_stdio_h2c",
+                    "command": "/usr/bin/example-h2c",
+                    "args": ["--stdio"],
+                    "capture_stderr": true,
+                    "shutdown_timeout": 2000000000
+                  },
+                  "upstreams": [{"dial": "127.0.0.1:65535"}]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+## Configuration reference
+
+```caddyfile
+transport cgi_stdio_h2c {
+	command <path>
+	args <arg...>
+	dir <path>
+	env <key> <value>
+	restart <bool>
+	capture_stderr
+	shutdown_timeout <duration>
+}
+```
+
+- `command` — executable path for the backend process. Required.
+- `args` — arguments passed to `command`.
+- `dir` — working directory for the backend process.
+- `env` — extra environment variable. May be repeated. Values may use Caddy placeholders.
+- `restart` — whether to discard and recreate the backend session after a `RoundTrip` error. Default: `true`.
+- `capture_stderr` — capture child stderr and write each line to Caddy logs.
+- `shutdown_timeout` — time to wait for graceful shutdown before killing the process. Default: `2s`.
+
+## Backend protocol expectations
+
+The child process must speak cleartext HTTP/2 over stdin/stdout. Caddy writes HTTP/2 client frames to the child's stdin and reads HTTP/2 server frames from the child's stdout.
+
+## Operational notes
+
+- Each transport instance uses one shared HTTP/2 session to the child process.
+- Concurrent requests are multiplexed as HTTP/2 streams on that session.
+- If `restart` is enabled, a request error marks the session broken and starts a new process for later requests.
+- Restarting the shared session may affect other in-flight streams.
+- `Cleanup` stops the current child process; a later request after reprovisioning starts a new process.
+- On Unix systems, shutdown signals are sent to the child's process group.
+- On Windows, shutdown kills the process directly.
+
+## License
+
+Apache-2.0.
