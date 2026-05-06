@@ -1,8 +1,14 @@
-# Caddy CGI stdio h2c reverse proxy transport
+# Caddy CGI H2C: Modern successor to cgi-bin
 
-A Caddy reverse proxy transport that starts a child process and proxies requests to it over cleartext HTTP/2 (`h2c`) on the process's stdin/stdout.
+I was curious if we could marry cgi-bin process model with reverse proxies. We can! This caddy module allows one to reverse proxy to a binary via stdio. Eg your server is a binary that receives unencrypted http/2 on stdin and responds on stdout. Since http/2 supports connection multiplexing, a single binary invocation can handle multiple requests. After last request is done, the process is shut down.
 
-This is useful for CGI-style backends that speak HTTP/2 over stdio instead of listening on a TCP or Unix socket.
+This means less work to deploy services:
+- No need to allocate ports/ips
+- No need to write systemd units or docker services to manage services
+
+Processes are easy to sandbox:
+- Can use [landrun](https://github.com/Zouuup/landrun) or some BSD equivalent
+- Can wrap your binary in wasm runtime
 
 ## Caddy module name
 
