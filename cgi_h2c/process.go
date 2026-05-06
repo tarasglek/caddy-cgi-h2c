@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cgistdioh2c
+package cgih2c
 
 import (
 	"bufio"
@@ -79,7 +79,7 @@ func logStderr(r io.Reader, logger *zap.Logger) error {
 			if errors.Is(err, bufio.ErrBufferFull) {
 				fields = append(fields, zap.Bool("truncated", true))
 			}
-			logger.Warn("cgi_stdio_h2c child stderr", fields...)
+			logger.Warn("cgi_h2c child stderr", fields...)
 		}
 		if err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, bufio.ErrBufferFull) {

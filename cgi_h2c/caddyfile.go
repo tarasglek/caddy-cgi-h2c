@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cgistdioh2c
+package cgih2c
 
 import (
 	"strconv"
@@ -23,7 +23,7 @@ import (
 
 // UnmarshalCaddyfile deserializes Caddyfile tokens into t.
 //
-//	transport cgi_stdio_h2c {
+//	transport cgi_h2c {
 //	    command <path>
 //	    args <arg...>
 //	    dir <path>

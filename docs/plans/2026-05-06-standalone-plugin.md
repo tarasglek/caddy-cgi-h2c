@@ -1,10 +1,10 @@
-# Caddy CGI stdio h2c Reverse Proxy Plugin Implementation Plan
+# Caddy CGI h2c Reverse Proxy Plugin Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Extract the branch's stdio h2c reverse proxy transport into a standalone Caddy plugin published as `github.com/tarasglek/caddy-cgi-h2c`.
+**Goal:** Extract the branch's CGI h2c reverse proxy transport into a standalone Caddy plugin published as `github.com/tarasglek/caddy-cgi-h2c`.
 
-**Architecture:** The repository root is an xcaddy-friendly shim package that blank-imports the real transport module in subdirectory `cgi_stdio_h2c`. The transport remains a Caddy reverse proxy transport, renamed to `http.reverse_proxy.transport.cgi_stdio_h2c`, with matching Caddyfile syntax `transport cgi_stdio_h2c`.
+**Architecture:** The repository root is an xcaddy-friendly shim package that blank-imports the real transport module in subdirectory `cgi_h2c`. The transport remains a Caddy reverse proxy transport, renamed to `http.reverse_proxy.transport.cgi_h2c`, with matching Caddyfile syntax `transport cgi_h2c`.
 
 **Tech Stack:** Go, Caddy v2 module APIs, `golang.org/x/net/http2`, GitHub Actions, xcaddy.
 
@@ -15,25 +15,25 @@
 **Files:**
 - Create: `/home/taras/Documents/caddy-cgi-h2c/go.mod`
 - Create: `/home/taras/Documents/caddy-cgi-h2c/imports.go`
-- Create: `/home/taras/Documents/caddy-cgi-h2c/cgi_stdio_h2c/*.go`
+- Create: `/home/taras/Documents/caddy-cgi-h2c/cgi_h2c/*.go`
 
 **Steps:**
 1. Initialize git repository if missing.
 2. Create `go.mod` with module path `github.com/tarasglek/caddy-cgi-h2c`.
-3. Copy branch implementation files into `cgi_stdio_h2c/`.
-4. Add root `imports.go` that blank-imports `github.com/tarasglek/caddy-cgi-h2c/cgi_stdio_h2c`.
+3. Copy branch implementation files into `cgi_h2c/`.
+4. Add root `imports.go` that blank-imports `github.com/tarasglek/caddy-cgi-h2c/cgi_h2c`.
 5. Run `go test ./...` and expect module setup/downloads to complete or expose rename errors.
 
 ### Task 2: Rename module and docs-facing identifiers
 
 **Files:**
-- Modify: `/home/taras/Documents/caddy-cgi-h2c/cgi_stdio_h2c/*.go`
+- Modify: `/home/taras/Documents/caddy-cgi-h2c/cgi_h2c/*.go`
 
 **Steps:**
-1. Rename package declarations to `cgistdioh2c`.
-2. Change Caddy module ID to `http.reverse_proxy.transport.cgi_stdio_h2c`.
-3. Change test Caddyfile snippets from `stdio_h2c` to `cgi_stdio_h2c`.
-4. Rename environment/test helper identifiers and log/error text from `stdio_h2c`/`STDIO_H2C` to `cgi_stdio_h2c`/`CGI_STDIO_H2C`.
+1. Rename package declarations to `cgih2c`.
+2. Change Caddy module ID to `http.reverse_proxy.transport.cgi_h2c`.
+3. Change test Caddyfile snippets from `cgi_h2c` to `cgi_h2c`.
+4. Rename environment/test helper identifiers and log/error text from `cgi_h2c`/`CGI_H2C` to `cgi_h2c`/`CGI_H2C`.
 5. Run `gofmt -w .`.
 6. Run `go test ./...` and expect pass.
 

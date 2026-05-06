@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cgistdioh2c
+package cgih2c
 
 import (
 	"errors"
@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-type stdioConn struct {
+type cgiConn struct {
 	r     io.ReadCloser
 	w     io.WriteCloser
 	close func()
@@ -32,10 +32,10 @@ type stdioConn struct {
 	closeErr  error
 }
 
-func (c *stdioConn) Read(p []byte) (int, error)  { return c.r.Read(p) }
-func (c *stdioConn) Write(p []byte) (int, error) { return c.w.Write(p) }
+func (c *cgiConn) Read(p []byte) (int, error)  { return c.r.Read(p) }
+func (c *cgiConn) Write(p []byte) (int, error) { return c.w.Write(p) }
 
-func (c *stdioConn) Close() error {
+func (c *cgiConn) Close() error {
 	c.closeOnce.Do(func() {
 		c.closeErr = ignoreClosedPipeError(errors.Join(c.r.Close(), c.w.Close()))
 		if c.close != nil {
@@ -52,17 +52,17 @@ func ignoreClosedPipeError(err error) error {
 	return err
 }
 
-func (c *stdioConn) LocalAddr() net.Addr  { return stdioAddr("local") }
-func (c *stdioConn) RemoteAddr() net.Addr { return stdioAddr("remote") }
+func (c *cgiConn) LocalAddr() net.Addr  { return cgiAddr("local") }
+func (c *cgiConn) RemoteAddr() net.Addr { return cgiAddr("remote") }
 
-// Deadlines are not implemented for stdio pipes. Request cancellation closes
+// Deadlines are not implemented for stdin/stdout pipes. Request cancellation closes
 // the underlying connection/process instead.
-func (c *stdioConn) SetDeadline(time.Time) error { return nil }
+func (c *cgiConn) SetDeadline(time.Time) error { return nil }
 
-func (c *stdioConn) SetReadDeadline(time.Time) error  { return nil }
-func (c *stdioConn) SetWriteDeadline(time.Time) error { return nil }
+func (c *cgiConn) SetReadDeadline(time.Time) error  { return nil }
+func (c *cgiConn) SetWriteDeadline(time.Time) error { return nil }
 
-type stdioAddr string
+type cgiAddr string
 
-func (a stdioAddr) Network() string { return "stdio" }
-func (a stdioAddr) String() string  { return "stdio-" + string(a) }
+func (a cgiAddr) Network() string { return "cgi-h2c" }
+func (a cgiAddr) String() string  { return "cgi-h2c-" + string(a) }

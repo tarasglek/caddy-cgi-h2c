@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cgistdioh2c
+package cgih2c
 
 import (
 	"context"
@@ -83,7 +83,7 @@ type Transport struct {
 // CaddyModule returns the Caddy module information.
 func (Transport) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
-		ID:  "http.reverse_proxy.transport.cgi_stdio_h2c",
+		ID:  "http.reverse_proxy.transport.cgi_h2c",
 		New: func() caddy.Module { return new(Transport) },
 	}
 }
@@ -117,7 +117,7 @@ func (t *Transport) Provision(ctx caddy.Context) error {
 // RoundTrip proxies req to the child process over the shared h2c session.
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	// HTTP/2 client requests require a scheme and authority. The reverse proxy
-	// normally sets them, but fill harmless stdio-local defaults for direct use
+	// normally sets them, but fill harmless cgi-h2c-local defaults for direct use
 	// in tests or custom callers.
 	if req.URL.Scheme == "" || req.URL.Host == "" {
 		req2 := req.Clone(req.Context())
@@ -126,7 +126,7 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 			u.Scheme = "http"
 		}
 		if u.Host == "" {
-			u.Host = "stdio.local"
+			u.Host = "cgi-h2c.local"
 		}
 		req2.URL = &u
 		req = req2
@@ -134,7 +134,7 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	cc, err := t.clientConn()
 	if err != nil {
-		return nil, fmt.Errorf("getting cgi_stdio_h2c client connection: %v", err)
+		return nil, fmt.Errorf("getting cgi_h2c client connection: %v", err)
 	}
 	resp, err := cc.RoundTrip(req)
 	if err != nil {
@@ -160,7 +160,7 @@ func (t *Transport) clientConn() (*http2.ClientConn, error) {
 
 	state := t.detachLocked()
 	if !state.empty() {
-		_ = t.closeDetachedState(state, "closing stale cgi_stdio_h2c session")
+		_ = t.closeDetachedState(state, "closing stale cgi_h2c session")
 	}
 
 	for t.stopping {
@@ -171,7 +171,7 @@ func (t *Transport) clientConn() (*http2.ClientConn, error) {
 		return t.cc, nil
 	}
 	if t.lastStartFailure != nil && time.Since(t.lastStartFailureTime) < startupFailureCooldown {
-		return nil, fmt.Errorf("recent cgi_stdio_h2c startup failure: %v", t.lastStartFailure)
+		return nil, fmt.Errorf("recent cgi_h2c startup failure: %v", t.lastStartFailure)
 	}
 	if err := t.startLocked(); err != nil {
 		t.lastStartFailure = err
@@ -220,7 +220,7 @@ func (t *Transport) startLocked() error {
 		go func() {
 			defer stderrWG.Done()
 			if err := logStderr(stderr, t.logger); err != nil && t.logger != nil {
-				t.logger.Warn("reading cgi_stdio_h2c child stderr", zap.Error(err))
+				t.logger.Warn("reading cgi_h2c child stderr", zap.Error(err))
 			}
 		}()
 	}
@@ -237,7 +237,7 @@ func (t *Transport) startLocked() error {
 		close(child.waitCh)
 	}()
 
-	conn := &stdioConn{
+	conn := &cgiConn{
 		r:     stdout,
 		w:     stdin,
 		close: child.cancel,
@@ -282,7 +282,7 @@ func (t *Transport) markBroken() {
 		t.cond.Wait()
 	}
 	state := t.detachLocked()
-	_ = t.closeDetachedState(state, "closing broken cgi_stdio_h2c session")
+	_ = t.closeDetachedState(state, "closing broken cgi_h2c session")
 }
 
 // Cleanup closes the h2c session and stops the child process.
@@ -294,7 +294,7 @@ func (t *Transport) Cleanup() error {
 		t.cond.Wait()
 	}
 	state := t.detachLocked()
-	return t.closeDetachedState(state, "closing cgi_stdio_h2c session during cleanup")
+	return t.closeDetachedState(state, "closing cgi_h2c session during cleanup")
 }
 
 type transportState struct {

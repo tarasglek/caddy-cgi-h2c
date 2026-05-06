@@ -14,7 +14,7 @@
 
 //go:build !windows
 
-package cgistdioh2c
+package cgih2c
 
 import (
 	"errors"

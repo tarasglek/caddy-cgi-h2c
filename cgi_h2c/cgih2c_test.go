@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cgistdioh2c
+package cgih2c
 
 import (
 	"context"
@@ -36,7 +36,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	if os.Getenv("CADDY_CGI_STDIO_H2C_CHILD") == "1" {
+	if os.Getenv("CADDY_CGI_H2C_CHILD") == "1" {
 		runChild()
 		return
 	}
@@ -44,9 +44,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestUnmarshalCaddyfile(t *testing.T) {
-	d := caddyfile.NewTestDispenser(`cgi_stdio_h2c {
+	d := caddyfile.NewTestDispenser(`cgi_h2c {
 		command /path/to/http2stdin
-		args -stdio -flag value
+		args -cgi-h2c -flag value
 		dir /tmp
 		env KEY value
 		env OTHER thing
@@ -63,7 +63,7 @@ func TestUnmarshalCaddyfile(t *testing.T) {
 	if tr.Command != "/path/to/http2stdin" {
 		t.Errorf("Command = %q", tr.Command)
 	}
-	if !reflect.DeepEqual(tr.Args, []string{"-stdio", "-flag", "value"}) {
+	if !reflect.DeepEqual(tr.Args, []string{"-cgi-h2c", "-flag", "value"}) {
 		t.Errorf("Args = %#v", tr.Args)
 	}
 	if tr.Dir != "/tmp" {
@@ -124,7 +124,7 @@ func TestLogStderrDrainsLongLines(t *testing.T) {
 }
 
 func TestRoundTripWrapsStartError(t *testing.T) {
-	tr := &Transport{Command: "caddy-stdio-h2c-command-that-does-not-exist"}
+	tr := &Transport{Command: "caddy-cgi-h2c-command-that-does-not-exist"}
 	if err := tr.Provision(caddy.Context{}); err != nil {
 		t.Fatalf("Provision() error = %v", err)
 	}
@@ -132,13 +132,13 @@ func TestRoundTripWrapsStartError(t *testing.T) {
 	if err == nil {
 		t.Fatal("RoundTrip() expected error")
 	}
-	if !strings.Contains(err.Error(), "getting cgi_stdio_h2c client connection") || !strings.Contains(err.Error(), "starting backend command") {
+	if !strings.Contains(err.Error(), "getting cgi_h2c client connection") || !strings.Contains(err.Error(), "starting backend command") {
 		t.Fatalf("RoundTrip() error = %v, want client connection and starting backend command context", err)
 	}
 }
 
 func TestClientConnThrottlesRepeatedStartFailures(t *testing.T) {
-	tr := &Transport{Command: "caddy-stdio-h2c-command-that-does-not-exist"}
+	tr := &Transport{Command: "caddy-cgi-h2c-command-that-does-not-exist"}
 	if err := tr.Provision(caddy.Context{}); err != nil {
 		t.Fatalf("Provision() error = %v", err)
 	}
@@ -151,20 +151,20 @@ func TestClientConnThrottlesRepeatedStartFailures(t *testing.T) {
 	if err2 == nil {
 		t.Fatal("second RoundTrip() expected error")
 	}
-	if !strings.Contains(err2.Error(), "recent cgi_stdio_h2c startup failure") {
+	if !strings.Contains(err2.Error(), "recent cgi_h2c startup failure") {
 		t.Fatalf("second error = %v, want cached startup failure context", err2)
 	}
 }
 
 func TestStdioConnImplementsNetConn(t *testing.T) {
-	var _ net.Conn = (*stdioConn)(nil)
+	var _ net.Conn = (*cgiConn)(nil)
 }
 
 func TestRoundTripMultiplexesOverOneChildStdioH2CSession(t *testing.T) {
 	tr := &Transport{
 		Command: os.Args[0],
 		Args:    []string{"-test.run=TestHelperProcess", "--"},
-		EnvVars: map[string]string{"CADDY_CGI_STDIO_H2C_CHILD": "1"},
+		EnvVars: map[string]string{"CADDY_CGI_H2C_CHILD": "1"},
 	}
 	if err := tr.Provision(caddy.Context{}); err != nil {
 		t.Fatalf("Provision() error = %v", err)
@@ -253,7 +253,7 @@ func TestCleanupAfterChildExitIsIdempotent(t *testing.T) {
 	tr := &Transport{
 		Command: os.Args[0],
 		Args:    []string{"-test.run=TestHelperProcess", "--"},
-		EnvVars: map[string]string{"CADDY_CGI_STDIO_H2C_CHILD": "1", "CADDY_CGI_STDIO_H2C_EXIT_AFTER_PID": "1"},
+		EnvVars: map[string]string{"CADDY_CGI_H2C_CHILD": "1", "CADDY_CGI_H2C_EXIT_AFTER_PID": "1"},
 	}
 	if err := tr.Provision(caddy.Context{}); err != nil {
 		t.Fatalf("Provision() error = %v", err)
@@ -409,7 +409,7 @@ func newTestTransport(t *testing.T) *Transport {
 	tr := &Transport{
 		Command: os.Args[0],
 		Args:    []string{"-test.run=TestHelperProcess", "--"},
-		EnvVars: map[string]string{"CADDY_CGI_STDIO_H2C_CHILD": "1"},
+		EnvVars: map[string]string{"CADDY_CGI_H2C_CHILD": "1"},
 	}
 	if err := tr.Provision(caddy.Context{}); err != nil {
 		t.Fatalf("Provision() error = %v", err)
@@ -456,7 +456,7 @@ func assertProcessGone(t *testing.T, pid int) {
 }
 
 func roundTripBody(ctx context.Context, rt http.RoundTripper, path string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://stdio.local"+path, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://cgi-h2c.local"+path, nil)
 	if err != nil {
 		return "", err
 	}
@@ -493,7 +493,7 @@ func runChild() {
 			fmt.Fprintf(w, "finish proto=%s\n", r.Proto)
 		case "/pid":
 			fmt.Fprintf(w, "%d\n", os.Getpid())
-			if os.Getenv("CADDY_CGI_STDIO_H2C_EXIT_AFTER_PID") == "1" {
+			if os.Getenv("CADDY_CGI_H2C_EXIT_AFTER_PID") == "1" {
 				go func() {
 					time.Sleep(10 * time.Millisecond)
 					os.Exit(0)
@@ -506,7 +506,7 @@ func runChild() {
 		}
 	})
 
-	conn := &stdioConn{r: os.Stdin, w: os.Stdout, close: func() {}}
+	conn := &cgiConn{r: os.Stdin, w: os.Stdout, close: func() {}}
 	server := &http2.Server{}
 	server.ServeConn(conn, &http2.ServeConnOpts{Handler: handler})
 }

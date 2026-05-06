@@ -14,16 +14,6 @@
 
 //go:build windows
 
-package cgistdioh2c
+package cgih2c
 
-import (
-	"os"
-	"os/exec"
-	"syscall"
-)
-
-func configureBackendProcAttrs(cmd *exec.Cmd) {}
-
-func terminateProcessGroup(proc *os.Process, sig syscall.Signal) error {
-	return proc.Kill()
-}
+func processExists(pid int) bool { return false }

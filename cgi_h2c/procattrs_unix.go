@@ -12,8 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build windows
+//go:build !windows
 
-package cgistdioh2c
+package cgih2c
 
-func processExists(pid int) bool { return false }
+import (
+	"os"
+	"os/exec"
+	"syscall"
+)
+
+func configureBackendProcAttrs(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+}
+
+func terminateProcessGroup(proc *os.Process, sig syscall.Signal) error {
+	return syscall.Kill(-proc.Pid, sig)
+}

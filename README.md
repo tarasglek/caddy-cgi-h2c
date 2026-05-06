@@ -1,6 +1,6 @@
 # Caddy CGI H2C: Modern successor to cgi-bin
 
-I was curious if we could marry cgi-bin process model with reverse proxies. We can! This caddy module allows one to reverse proxy to a binary via stdio. Eg your server is a binary that receives unencrypted http/2 on stdin and responds on stdout. Since http/2 supports connection multiplexing, a single binary invocation can handle multiple requests. After last request is done, the process is shut down.
+I was curious if we could marry cgi-bin process model with reverse proxies. We can! This caddy module allows one to reverse proxy to a binary via stdin/stdout. Eg your server is a binary that receives unencrypted http/2 on stdin and responds on stdout. Since http/2 supports connection multiplexing, a single binary invocation can handle multiple requests. After last request is done, the process is shut down.
 
 This means less work to deploy services:
 - No need to allocate ports/ips
@@ -13,7 +13,7 @@ Processes are easy to sandbox:
 ## Caddy module name
 
 ```text
-http.reverse_proxy.transport.cgi_stdio_h2c
+http.reverse_proxy.transport.cgi_h2c
 ```
 
 ## Build
@@ -36,9 +36,9 @@ xcaddy build --with github.com/tarasglek/caddy-cgi-h2c=.
 :8080
 
 reverse_proxy 127.0.0.1:65535 {
-	transport cgi_stdio_h2c {
+	transport cgi_h2c {
 		command /usr/bin/example-h2c
-		args --stdio --flag value
+		args --cgi-h2c --flag value
 		dir /srv/app
 		env KEY value
 		restart true
@@ -48,7 +48,7 @@ reverse_proxy 127.0.0.1:65535 {
 }
 ```
 
-The upstream address is still required by Caddy's reverse proxy handler, but this transport communicates with the configured child process over stdio.
+The upstream address is still required by Caddy's reverse proxy handler, but this transport communicates with the configured child process over stdin/stdout.
 
 ## JSON example
 
@@ -65,9 +65,9 @@ The upstream address is still required by Caddy's reverse proxy handler, but thi
                 {
                   "handler": "reverse_proxy",
                   "transport": {
-                    "protocol": "cgi_stdio_h2c",
+                    "protocol": "cgi_h2c",
                     "command": "/usr/bin/example-h2c",
-                    "args": ["--stdio"],
+                    "args": ["--cgi-h2c"],
                     "capture_stderr": true,
                     "shutdown_timeout": 2000000000
                   },
@@ -86,7 +86,7 @@ The upstream address is still required by Caddy's reverse proxy handler, but thi
 ## Configuration reference
 
 ```caddyfile
-transport cgi_stdio_h2c {
+transport cgi_h2c {
 	command <path>
 	args <arg...>
 	dir <path>
